@@ -51,13 +51,11 @@ class Call(NamedTuple):
 
     @property
     def response(self) -> httpx.Response:
-        if self.optional_response is None:
-            raise ValueError(f"{self!r} has no response")
-        return self.optional_response
+        pass
 
     @property
     def has_response(self) -> bool:
-        return self.optional_response is not None
+        pass
 
 
 class CallList(list, mock.NonCallableMock):
@@ -67,15 +65,15 @@ class CallList(list, mock.NonCallableMock):
 
     @property
     def called(self) -> bool:  # type: ignore[override]
-        return bool(self)
+        pass
 
     @property
     def call_count(self) -> int:  # type: ignore[override]
-        return len(self)
+        pass
 
     @property
     def last(self) -> Call:
-        return self[-1]
+        pass
 
     def record(
         self, request: httpx.Request, response: Optional[httpx.Response]
@@ -176,7 +174,7 @@ class Route:
 
     @property
     def name(self) -> Optional[str]:
-        return self._name
+        pass
 
     @name.setter
     def name(self, name: str) -> None:
@@ -184,7 +182,7 @@ class Route:
 
     @property
     def pattern(self) -> Pattern:
-        return self._pattern
+        pass
 
     @pattern.setter
     def pattern(self, pattern: Pattern) -> None:
@@ -192,33 +190,24 @@ class Route:
 
     @property
     def return_value(self) -> Optional[httpx.Response]:
-        return self._return_value
+        pass
 
     @return_value.setter
     def return_value(self, return_value: Optional[httpx.Response]) -> None:
-        if return_value is not None and not isinstance(return_value, httpx.Response):
-            raise TypeError(f"{return_value!r} is not an instance of httpx.Response")
-        self.pass_through(False)
-        self._return_value = return_value
+        pass
 
     @property
     def side_effect(
         self,
     ) -> Optional[Union[SideEffectTypes, Sequence[SideEffectListTypes]]]:
-        return self._side_effect
+        pass
 
     @side_effect.setter
     def side_effect(
         self,
         side_effect: Optional[Union[SideEffectTypes, Sequence[SideEffectListTypes]]],
     ) -> None:
-        self.pass_through(False)
-        if not side_effect:
-            self._side_effect = None
-        elif isinstance(side_effect, (Iterator, Sequence)):
-            self._side_effect = iter(side_effect)
-        else:
-            self._side_effect = side_effect
+        pass
 
     def snapshot(self) -> None:
         # Clone iterator-type side effect to not get pre-exhausted when rolled back
@@ -283,20 +272,7 @@ class Route:
         http_version: Optional[str] = None,
         **kwargs: Any,
     ) -> "Route":
-        response = MockResponse(
-            status_code,
-            headers=headers,
-            cookies=cookies,
-            content=content,
-            text=text,
-            html=html,
-            json=json,
-            stream=stream,
-            content_type=content_type,
-            http_version=http_version,
-            **kwargs,
-        )
-        return self.mock(return_value=response)
+        pass
 
     def pass_through(self, value: bool = True) -> "Route":
         self._pass_through = value
@@ -304,15 +280,15 @@ class Route:
 
     @property
     def is_pass_through(self) -> bool:
-        return self._pass_through
+        pass
 
     @property
     def called(self) -> bool:
-        return self.calls.called
+        pass
 
     @property
     def call_count(self) -> int:
-        return self.calls.call_count
+        pass
 
     def _next_side_effect(
         self,

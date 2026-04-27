@@ -135,7 +135,7 @@ class Pattern(ABC):
         """
         Clean and return pattern value.
         """
-        return value
+        pass
 
     def parse(self, request: httpx.Request) -> Any:  # pragma: nocover
         """
@@ -166,22 +166,19 @@ class Pattern(ABC):
         return lookup_method(value)
 
     def _eq(self, value: Any) -> Match:
-        return Match(value == self.value)
+        pass
 
     def _regex(self, value: str) -> Match:
-        match = self.value.search(value)
-        if match is None:
-            return Match(False)
-        return Match(True, **match.groupdict())
+        pass
 
     def _startswith(self, value: str) -> Match:
-        return Match(value.startswith(self.value))
+        pass
 
     def _contains(self, value: Any) -> Match:  # pragma: nocover
         raise NotImplementedError()
 
     def _in(self, value: Any) -> Match:
-        return Match(value in self.value)
+        pass
 
 
 class Noop(Pattern):
@@ -272,12 +269,7 @@ class Method(Pattern):
     value: Union[str, Sequence[str]]
 
     def clean(self, value: Union[str, Sequence[str]]) -> Union[str, Sequence[str]]:
-        if isinstance(value, str):
-            value = value.upper()
-        else:
-            assert isinstance(value, Sequence)
-            value = tuple(v.upper() for v in value)
-        return value
+        pass
 
     def parse(self, request: httpx.Request) -> str:
         return request.method
@@ -290,27 +282,12 @@ class MultiItemsMixin:
     def _multi_items(
         self, value: Any, *, parse_any: bool = False, encode_any: bool = False
     ) -> Tuple[Tuple[str, Tuple[Any, ...]], ...]:
-        return tuple(
-            (
-                key,
-                tuple(
-                    self._item_value(v, parse_any=parse_any, encode_any=encode_any)
-                    for v in value.get_list(key)
-                ),
-            )
-            for key in sorted(value.keys())
-        )
+        pass
 
     def _item_value(
         self, value: Any, parse_any: bool = False, encode_any: bool = False
     ) -> Any:
-        return (
-            ANY
-            if parse_any and value == str(ANY)
-            else str(ANY)
-            if encode_any and value is ANY
-            else value
-        )
+        pass
 
     def __hash__(self):
         return hash(
@@ -322,22 +299,10 @@ class MultiItemsMixin:
         )
 
     def _eq(self, value: Any) -> Match:
-        value_items = self._multi_items(self.value, parse_any=True)
-        request_items = self._multi_items(value)
-        return Match(value_items == request_items)
+        pass
 
     def _contains(self, value: Any) -> Match:
-        if len(self.value.multi_items()) > len(value.multi_items()):
-            return Match(False)
-
-        value_items = self._multi_items(self.value, parse_any=True)
-        request_items = self._multi_items(value)
-
-        for item in value_items:
-            if item not in request_items:
-                return Match(False)
-
-        return Match(True)
+        pass
 
 
 class Headers(MultiItemsMixin, Pattern):
@@ -346,7 +311,7 @@ class Headers(MultiItemsMixin, Pattern):
     value: httpx.Headers
 
     def clean(self, value: HeaderTypes) -> httpx.Headers:
-        return httpx.Headers(value)
+        pass
 
     def parse(self, request: httpx.Request) -> httpx.Headers:
         return request.headers
@@ -361,10 +326,7 @@ class Cookies(Pattern):
         return hash((self.__class__, self.lookup, tuple(sorted(self.value))))
 
     def clean(self, value: CookieTypes) -> Set[Tuple[str, str]]:
-        if isinstance(value, dict):
-            return set(value.items())
-
-        return set(value)
+        pass
 
     def parse(self, request: httpx.Request) -> Set[Tuple[str, str]]:
         headers = request.headers
@@ -379,7 +341,7 @@ class Cookies(Pattern):
         return {(cookie.key, cookie.value) for cookie in cookies.values()}
 
     def _contains(self, value: Set[Tuple[str, str]]) -> Match:
-        return Match(bool(self.value & value))
+        pass
 
 
 class Scheme(Pattern):
@@ -388,12 +350,7 @@ class Scheme(Pattern):
     value: Union[str, Sequence[str]]
 
     def clean(self, value: Union[str, Sequence[str]]) -> Union[str, Sequence[str]]:
-        if isinstance(value, str):
-            value = value.lower()
-        else:
-            assert isinstance(value, Sequence)
-            value = tuple(v.lower() for v in value)
-        return value
+        pass
 
     def parse(self, request: httpx.Request) -> str:
         return request.url.scheme
@@ -407,9 +364,7 @@ class Host(Pattern):
     def clean(
         self, value: Union[str, RegexPattern[str]]
     ) -> Union[str, RegexPattern[str]]:
-        if self.lookup is Lookup.REGEX and isinstance(value, str):
-            value = re.compile(value)
-        return value
+        pass
 
     def parse(self, request: httpx.Request) -> str:
         return request.url.host
@@ -435,25 +390,7 @@ class Path(Pattern):
     def clean(
         self, value: Union[str, RegexPattern[str]]
     ) -> Union[str, RegexPattern[str]]:
-        if self.lookup in (Lookup.EQUAL, Lookup.STARTS_WITH) and isinstance(value, str):
-            # Percent encode path, i.e. revert parsed path by httpx.URL.
-            # Borrowed from HTTPX's "private" quote and percent_encode utilities.
-            path = "".join(
-                char
-                if char
-                in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/"
-                else "".join(f"%{byte:02x}" for byte in char.encode("utf-8")).upper()
-                for char in value
-            )
-            # Ensure a leading slash. Note we don't use urljoin because its
-            # behaviour with multiple slashes in the path is incorrect - see
-            # https://github.com/lundberg/respx/issues/273
-            if not path.startswith("/"):
-                path = f"/{path}"
-            value = httpx.URL(path).path
-        elif self.lookup is Lookup.REGEX and isinstance(value, str):
-            value = re.compile(value)
-        return value
+        pass
 
     def parse(self, request: httpx.Request) -> str:
         return request.url.path
@@ -471,7 +408,7 @@ class Params(MultiItemsMixin, Pattern):
     value: httpx.QueryParams
 
     def clean(self, value: QueryParamTypes) -> httpx.QueryParams:
-        return httpx.QueryParams(value)
+        pass
 
     def parse(self, request: httpx.Request) -> httpx.QueryParams:
         query = request.url.query
@@ -488,18 +425,7 @@ class URL(Pattern):
     value: Union[str, RegexPattern[str]]
 
     def clean(self, value: URLPatternTypes) -> Union[str, RegexPattern[str]]:
-        url: Union[str, RegexPattern[str]]
-        if self.lookup is Lookup.EQUAL and isinstance(value, (str, tuple, httpx.URL)):
-            _url = parse_url(value)
-            _url = self._ensure_path(_url)
-            url = str(_url)
-        elif self.lookup is Lookup.REGEX and isinstance(value, str):
-            url = re.compile(value)
-        elif isinstance(value, (str, RegexPattern)):
-            url = value
-        else:
-            raise ValueError(f"Invalid url: {value!r}")
-        return url
+        pass
 
     def parse(self, request: httpx.Request) -> str:
         url = request.url
@@ -524,12 +450,10 @@ class Content(ContentMixin, Pattern):
     value: bytes
 
     def clean(self, value: Union[bytes, str]) -> bytes:
-        if isinstance(value, str):
-            return value.encode()
-        return value
+        pass
 
     def _contains(self, value: Union[bytes, str]) -> Match:
-        return Match(self.value in value)
+        pass
 
 
 class JSON(ContentMixin, PathPattern):
@@ -538,7 +462,7 @@ class JSON(ContentMixin, PathPattern):
     value: str
 
     def clean(self, value: Union[str, List, Dict]) -> str:
-        return self.hash(value)
+        pass
 
     def parse(self, request: httpx.Request) -> str:
         content = super().parse(request)
@@ -560,7 +484,7 @@ class JSON(ContentMixin, PathPattern):
         return self.hash(value)
 
     def hash(self, value: Union[str, List, Dict]) -> str:
-        return jsonlib.dumps(value, sort_keys=True)
+        pass
 
 
 class Data(MultiItemsMixin, Pattern):
@@ -569,17 +493,10 @@ class Data(MultiItemsMixin, Pattern):
     value: MultiItems
 
     def _normalize_value(self, value: Any) -> Union[str, List[str]]:
-        if value is None:
-            return ""
-        elif isinstance(value, (tuple, list)):
-            return [str(v) for v in value]
-        else:
-            return str(value)
+        pass
 
     def clean(self, value: Dict[str, Any]) -> MultiItems:
-        return MultiItems(
-            (key, self._normalize_value(value)) for key, value in value.items()
-        )
+        pass
 
     def parse(self, request: httpx.Request) -> Any:
         data, _ = decode_data(request)
@@ -593,40 +510,15 @@ class Files(MultiItemsMixin, Pattern):
 
     def _normalize_file_value(self, value: FileTypes) -> Tuple[Tuple[Any, Any]]:
         # Mimic httpx `FileField` to normalize `files` kwarg to shortest tuple style
-        if isinstance(value, tuple):
-            filename, fileobj = value[:2]
-        else:
-            try:
-                filename = pathlib.Path(str(getattr(value, "name"))).name  # noqa: B009
-            except AttributeError:
-                filename = ANY
-            fileobj = value
-
-        # Normalize file-like objects and strings to bytes to allow equality check
-        if isinstance(fileobj, io.BytesIO):
-            fileobj = fileobj.read()
-        elif isinstance(fileobj, str):
-            fileobj = fileobj.encode()
-
-        return ((filename, fileobj),)
+        pass
 
     def _item_value(
         self, value: Tuple[Any, Any], parse_any: bool = False, encode_any: bool = False
     ) -> Tuple[Any, Any]:
-        filename, data = value
-        return (
-            super()._item_value(filename, parse_any=parse_any, encode_any=encode_any),
-            super()._item_value(data, parse_any=parse_any, encode_any=encode_any),
-        )
+        pass
 
     def clean(self, value: RequestFiles) -> MultiItems:
-        if isinstance(value, Mapping):
-            value = list(value.items())
-
-        files = MultiItems(
-            (name, self._normalize_file_value(file_value)) for name, file_value in value
-        )
-        return files
+        pass
 
     def parse(self, request: httpx.Request) -> Any:
         _, files = decode_data(request)

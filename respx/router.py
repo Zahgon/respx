@@ -402,15 +402,11 @@ class MockRouter(Router):
 
         # Async Decorator
         async def _async_decorator(*args, **kwargs):
-            assert func is not None
-            async with self:
-                return await func(*args, **kwargs)
+            pass
 
         # Sync Decorator
         def _sync_decorator(*args, **kwargs):
-            assert func is not None
-            with self:
-                return func(*args, **kwargs)
+            pass
 
         if needs_mock_reference:
             async_decorator = wraps(func)(_async_decorator)
@@ -444,18 +440,7 @@ class MockRouter(Router):
 
     @property
     def using(self) -> Optional[str]:
-        from respx.mocks import DEFAULT_MOCKER
-
-        if self._using is None:
-            using = None
-        elif self._using is DEFAULT:
-            using = DEFAULT_MOCKER
-        elif isinstance(self._using, str):
-            using = self._using
-        else:
-            raise ValueError(f"Invalid Router `using` kwarg: {self._using!r}")
-
-        return using
+        pass
 
     def start(self) -> None:
         """

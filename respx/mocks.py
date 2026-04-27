@@ -56,18 +56,11 @@ class Mocker(ABC):
 
     @classmethod
     def add_targets(cls, *targets: str) -> None:
-        targets = tuple(filter(lambda t: t not in cls.targets, targets))
-        if targets:
-            cls.targets.extend(targets)
-            cls.restart()
+        pass
 
     @classmethod
     def remove_targets(cls, *targets: str) -> None:
-        targets = tuple(filter(lambda t: t in cls.targets, targets))
-        if targets:
-            for target in targets:
-                cls.targets.remove(target)
-            cls.restart()
+        pass
 
     @classmethod
     def start(cls) -> None:
@@ -100,9 +93,7 @@ class Mocker(ABC):
     @classmethod
     def restart(cls) -> None:
         # Only stop and start if started
-        if cls._patches:  # pragma: nocover
-            cls.stop(force=True)
-            cls.start()
+        pass
 
     @classmethod
     def handler(cls, httpx_request):
@@ -152,15 +143,7 @@ class HTTPXMocker(Mocker):
     @classmethod
     def mock(cls, spec):
         def _transport_for_url(self, *args, **kwargs):
-            handler = (
-                cls.async_handler
-                if inspect.iscoroutinefunction(self.request)
-                else cls.handler
-            )
-            mock_transport = httpx.MockTransport(handler)
-            pass_through_transport = spec(self, *args, **kwargs)
-            transport = TryTransport([mock_transport, pass_through_transport])
-            return transport
+            pass
 
         return _transport_for_url
 
@@ -184,13 +167,7 @@ class AbstractRequestMocker(Mocker):
             return response
 
         async def amock(self, *args, **kwargs):
-            kwargs = cls._merge_args_and_kwargs(argspec, args, kwargs)
-            request = cls.to_httpx_request(**kwargs)
-            request, kwargs = await cls.prepare_async_request(request, **kwargs)
-            response = await cls._send_async_request(
-                request, target_spec=spec, instance=self, **kwargs
-            )
-            return response
+            pass
 
         return amock if inspect.iscoroutinefunction(spec) else mock
 

@@ -73,21 +73,7 @@ class TryTransport(BaseTransport, AsyncBaseTransport):
         self.transports = transports
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
-        for transport in self.transports:
-            try:
-                transport = cast(BaseTransport, transport)
-                return transport.handle_request(request)
-            except PassThrough:
-                continue
-
-        raise RuntimeError()  # pragma: nocover
+        pass
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
-        for transport in self.transports:
-            try:
-                transport = cast(AsyncBaseTransport, transport)
-                return await transport.handle_async_request(request)
-            except PassThrough:
-                continue
-
-        raise RuntimeError()  # pragma: nocover
+        pass

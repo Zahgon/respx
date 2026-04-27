@@ -32,10 +32,10 @@ class MultiItems(defaultdict):
                     self[key] += (value,)  # Extend with value
 
     def get_list(self, key: str) -> List[Any]:
-        return list(self[key])
+        pass
 
     def multi_items(self) -> List[Tuple[str, str]]:
-        return [(key, value) for key, values in self.items() for value in values]
+        pass
 
     def append(self, key: str, value: Any) -> None:
         self[key] += (value,)
