@@ -89,13 +89,7 @@ class Pattern(ABC):
         cls.__registry[cls.key] = cls
 
     def __init__(self, value: Any, lookup: Optional[Lookup] = None) -> None:
-        if lookup and lookup not in self.lookups:
-            raise NotImplementedError(
-                f"{self.key!r} pattern does not support {lookup.value!r} lookup"
-            )
-        self.lookup = lookup or self.lookups[0]
-        self.base = None
-        self.value = self.clean(value)
+        pass
 
     def __iter__(self):
         yield self
@@ -141,29 +135,16 @@ class Pattern(ABC):
         """
         Parse and return request value to match with pattern value.
         """
-        raise NotImplementedError()
+        pass
 
     def strip_base(self, value: Any) -> Any:  # pragma: nocover
-        return value
+        pass
 
     def match(self, request: httpx.Request) -> Match:
-        try:
-            value = self.parse(request)
-        except Exception:
-            return Match(False)
-
-        # Match and strip base
-        if self.base:
-            base_match = self.base._match(value)
-            if not base_match:
-                return base_match
-            value = self.strip_base(value)
-
-        return self._match(value)
+        pass
 
     def _match(self, value: Any) -> Match:
-        lookup_method = getattr(self, f"_{self.lookup.value}")
-        return lookup_method(value)
+        pass
 
     def _eq(self, value: Any) -> Match:
         pass
@@ -175,7 +156,7 @@ class Pattern(ABC):
         pass
 
     def _contains(self, value: Any) -> Match:  # pragma: nocover
-        raise NotImplementedError()
+        pass
 
     def _in(self, value: Any) -> Match:
         pass
@@ -183,7 +164,7 @@ class Pattern(ABC):
 
 class Noop(Pattern):
     def __init__(self) -> None:
-        super().__init__(None)
+        pass
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -194,7 +175,7 @@ class Noop(Pattern):
 
     def match(self, request: httpx.Request) -> Match:
         # If this pattern is part of a combined pattern, always be truthy, i.e. noop
-        return Match(True)
+        pass
 
 
 class PathPattern(Pattern):
@@ -203,8 +184,7 @@ class PathPattern(Pattern):
     def __init__(
         self, value: Any, lookup: Optional[Lookup] = None, *, path: Optional[str] = None
     ) -> None:
-        self.path = path
-        super().__init__(value, lookup)
+        pass
 
 
 class _And(Pattern):
@@ -220,14 +200,7 @@ class _And(Pattern):
         yield from b
 
     def match(self, request: httpx.Request) -> Match:
-        a, b = self.value
-        a_match = a.match(request)
-        if not a_match:
-            return a_match
-        b_match = b.match(request)
-        if not b_match:
-            return b_match
-        return Match(True, **{**a_match.context, **b_match.context})
+        pass
 
 
 class _Or(Pattern):
@@ -243,11 +216,7 @@ class _Or(Pattern):
         yield from b
 
     def match(self, request: httpx.Request) -> Match:
-        a, b = self.value
-        match = a.match(request)
-        if not match:
-            match = b.match(request)
-        return match
+        pass
 
 
 class _Invert(Pattern):
@@ -260,7 +229,7 @@ class _Invert(Pattern):
         yield from self.value
 
     def match(self, request: httpx.Request) -> Match:
-        return ~self.value.match(request)
+        pass
 
 
 class Method(Pattern):
@@ -272,7 +241,7 @@ class Method(Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> str:
-        return request.method
+        pass
 
 
 class MultiItemsMixin:
@@ -314,7 +283,7 @@ class Headers(MultiItemsMixin, Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> httpx.Headers:
-        return request.headers
+        pass
 
 
 class Cookies(Pattern):
@@ -329,16 +298,7 @@ class Cookies(Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> Set[Tuple[str, str]]:
-        headers = request.headers
-
-        cookie_header = headers.get("cookie")
-        if not cookie_header:
-            return set()
-
-        cookies: SimpleCookie = SimpleCookie()
-        cookies.load(rawdata=cookie_header)
-
-        return {(cookie.key, cookie.value) for cookie in cookies.values()}
+        pass
 
     def _contains(self, value: Set[Tuple[str, str]]) -> Match:
         pass
@@ -353,7 +313,7 @@ class Scheme(Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> str:
-        return request.url.scheme
+        pass
 
 
 class Host(Pattern):
@@ -367,7 +327,7 @@ class Host(Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> str:
-        return request.url.host
+        pass
 
 
 class Port(Pattern):
@@ -376,10 +336,7 @@ class Port(Pattern):
     value: Optional[int]
 
     def parse(self, request: httpx.Request) -> Optional[int]:
-        scheme = request.url.scheme
-        port = request.url.port
-        scheme_port = get_scheme_port(scheme)
-        return port or scheme_port
+        pass
 
 
 class Path(Pattern):
@@ -393,13 +350,10 @@ class Path(Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> str:
-        return request.url.path
+        pass
 
     def strip_base(self, value: str) -> str:
-        if self.base:
-            value = value[len(self.base.value) :]
-            value = "/" + value if not value.startswith("/") else value
-        return value
+        pass
 
 
 class Params(MultiItemsMixin, Pattern):
@@ -411,8 +365,7 @@ class Params(MultiItemsMixin, Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> httpx.QueryParams:
-        query = request.url.query
-        return httpx.QueryParams(query)
+        pass
 
 
 class URL(Pattern):
@@ -428,20 +381,15 @@ class URL(Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> str:
-        url = request.url
-        url = self._ensure_path(url)
-        return str(url)
+        pass
 
     def _ensure_path(self, url: httpx.URL) -> httpx.URL:
-        if not url._uri_reference.path:
-            url = url.copy_with(path="/")
-        return url
+        pass
 
 
 class ContentMixin:
     def parse(self, request: httpx.Request) -> Any:
-        content = request.read()
-        return content
+        pass
 
 
 class Content(ContentMixin, Pattern):
@@ -465,23 +413,7 @@ class JSON(ContentMixin, PathPattern):
         pass
 
     def parse(self, request: httpx.Request) -> str:
-        content = super().parse(request)
-        json = jsonlib.loads(content.decode("utf-8"))
-
-        if self.path:
-            value = json
-            for bit in self.path.split("__"):
-                key = int(bit) if bit.isdigit() else bit
-                try:
-                    value = value[key]
-                except KeyError as e:
-                    raise KeyError(f"{self.path!r} not in {json!r}") from e
-                except IndexError as e:
-                    raise IndexError(f"{self.path!r} not in {json!r}") from e
-        else:
-            value = json
-
-        return self.hash(value)
+        pass
 
     def hash(self, value: Union[str, List, Dict]) -> str:
         pass
@@ -499,8 +431,7 @@ class Data(MultiItemsMixin, Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> Any:
-        data, _ = decode_data(request)
-        return data
+        pass
 
 
 class Files(MultiItemsMixin, Pattern):
@@ -521,154 +452,30 @@ class Files(MultiItemsMixin, Pattern):
         pass
 
     def parse(self, request: httpx.Request) -> Any:
-        _, files = decode_data(request)
-        return files
+        pass
 
 
 def M(*patterns: Pattern, **lookups: Any) -> Pattern:
-    extras = None
-
-    for pattern__lookup, value in lookups.items():
-        # Handle url pattern
-        if pattern__lookup == "url":
-            extras = parse_url_patterns(value)
-            continue
-
-        # Parse pattern key and lookup
-        pattern_key, __, rest = pattern__lookup.partition("__")
-        path, __, lookup_name = rest.rpartition("__")
-        if pattern_key not in Pattern.registry:
-            raise KeyError(f"{pattern_key!r} is not a valid Pattern")
-
-        # Get pattern class
-        P = Pattern.registry[pattern_key]
-        pattern: Union[Pattern, PathPattern]
-
-        if issubclass(P, PathPattern):
-            # Make path supported pattern, i.e. JSON
-            try:
-                lookup = Lookup(lookup_name) if lookup_name else None
-            except ValueError:
-                lookup = None
-                path = rest
-            pattern = P(value, lookup=lookup, path=path)
-        else:
-            # Make regular pattern
-            lookup = Lookup(lookup_name) if lookup_name else None
-            pattern = P(value, lookup=lookup)
-
-        # Skip patterns with no value, exept when using equal lookup
-        if not pattern.value and pattern.lookup is not Lookup.EQUAL:
-            continue
-
-        patterns += (pattern,)
-
-    # Combine and merge patterns
-    combined_pattern = combine(patterns)
-    if extras:
-        combined_pattern = merge_patterns(combined_pattern, **extras)
-
-    return combined_pattern
+    pass
 
 
 def get_scheme_port(scheme: Optional[str]) -> Optional[int]:
-    return {"http": 80, "https": 443}.get(scheme or "")
+    pass
 
 
 def combine(patterns: Sequence[Pattern], op: Callable = operator.and_) -> Pattern:
-    patterns = tuple(filter(None, patterns))
-    if not patterns:
-        return Noop()
-    return reduce(op, patterns)
+    pass
 
 
 def parse_url(value: Union[httpx.URL, str, RawURL]) -> httpx.URL:
-    url: Union[httpx.URL, str]
-
-    if isinstance(value, tuple):
-        # Handle "raw" httpcore urls. Borrowed from HTTPX prior to #2241
-        raw_scheme, raw_host, port, raw_path = value
-        scheme = raw_scheme.decode("ascii")
-        host = raw_host.decode("ascii")
-        if host and ":" in host and host[0] != "[":
-            # it's an IPv6 address, so it should be enclosed in "[" and "]"
-            # ref: https://tools.ietf.org/html/rfc2732#section-2
-            # ref: https://tools.ietf.org/html/rfc3986#section-3.2.2
-            host = f"[{host}]"
-        port_str = "" if port is None else f":{port}"
-        path = raw_path.decode("ascii")
-        url = f"{scheme}://{host}{port_str}{path}"
-    else:
-        url = value
-
-    return httpx.URL(url)
+    pass
 
 
 def parse_url_patterns(
     url: Optional[URLPatternTypes], exact: bool = True
 ) -> Dict[str, Pattern]:
-    bases: Dict[str, Pattern] = {}
-    if not url or url == "all":
-        return bases
-
-    if isinstance(url, RegexPattern):
-        return {"url": URL(url, lookup=Lookup.REGEX)}
-
-    url = parse_url(url)
-    scheme_port = get_scheme_port(url.scheme)
-
-    if url.scheme and url.scheme != "all":
-        bases[Scheme.key] = Scheme(url.scheme)
-    if url.host:
-        # NOTE: Host regex patterns borrowed from HTTPX source to support proxy format
-        if url.host.startswith("*."):
-            domain = re.escape(url.host[2:])
-            regex = re.compile(f"^.+\\.{domain}$")
-            bases[Host.key] = Host(regex, lookup=Lookup.REGEX)
-        elif url.host.startswith("*"):
-            domain = re.escape(url.host[1:])
-            regex = re.compile(f"^(.+\\.)?{domain}$")
-            bases[Host.key] = Host(regex, lookup=Lookup.REGEX)
-        else:
-            bases[Host.key] = Host(url.host)
-    if url.port and url.port != scheme_port:
-        bases[Port.key] = Port(url.port)
-    if url._uri_reference.path:  # URL.path always returns "/"
-        lookup = Lookup.EQUAL if exact else Lookup.STARTS_WITH
-        bases[Path.key] = Path(url.path, lookup=lookup)
-    if url.query:
-        lookup = Lookup.EQUAL if exact else Lookup.CONTAINS
-        bases[Params.key] = Params(url.query, lookup=lookup)
-
-    return bases
+    pass
 
 
 def merge_patterns(pattern: Pattern, **bases: Pattern) -> Pattern:
-    if not bases:
-        return pattern
-
-    # Flatten pattern
-    patterns: List[Pattern] = list(filter(None, iter(pattern)))
-
-    if patterns:
-        if "host" in (_pattern.key for _pattern in patterns):
-            # Pattern is "absolute", skip merging
-            bases = {}
-        else:
-            # Traverse pattern and set related base
-            for _pattern in patterns:
-                base = bases.pop(_pattern.key, None)
-                # Skip "exact" base + don't overwrite existing base
-                if _pattern.base or base and base.lookup is Lookup.EQUAL:
-                    continue
-                _pattern.base = base
-
-    if bases:
-        # Combine left over base patterns with pattern
-        base_pattern = combine(list(bases.values()))
-        if pattern and base_pattern:
-            pattern = base_pattern & pattern
-        else:
-            pattern = base_pattern
-
-    return pattern
+    pass

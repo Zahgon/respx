@@ -12,23 +12,19 @@ calls: CallList = mock.calls
 
 
 def start() -> None:
-    global mock
-    mock.start()
+    pass
 
 
 def stop(clear: bool = True, reset: bool = True) -> None:
-    global mock
-    mock.stop(clear=clear, reset=reset)
+    pass
 
 
 def clear() -> None:
-    global mock
-    mock.clear()
+    pass
 
 
 def reset() -> None:
-    global mock
-    mock.reset()
+    pass
 
 
 @overload
@@ -42,18 +38,15 @@ def pop(name: str, default: DefaultType) -> Union[Route, DefaultType]:
 
 
 def pop(name, default=...):
-    global mock
-    return mock.pop(name, default=default)
+    pass
 
 
 def route(*patterns: Pattern, name: Optional[str] = None, **lookups: Any) -> Route:
-    global mock
-    return mock.route(*patterns, name=name, **lookups)
+    pass
 
 
 def add(route: Route, *, name: Optional[str] = None) -> Route:
-    global mock
-    return mock.add(route, name=name)
+    pass
 
 
 def request(
@@ -63,54 +56,46 @@ def request(
     name: Optional[str] = None,
     **lookups: Any,
 ) -> Route:
-    global mock
-    return mock.request(method, url, name=name, **lookups)
+    pass
 
 
 def get(
     url: Optional[URLPatternTypes] = None, *, name: Optional[str] = None, **lookups: Any
 ) -> Route:
-    global mock
-    return mock.get(url, name=name, **lookups)
+    pass
 
 
 def post(
     url: Optional[URLPatternTypes] = None, *, name: Optional[str] = None, **lookups: Any
 ) -> Route:
-    global mock
-    return mock.post(url, name=name, **lookups)
+    pass
 
 
 def put(
     url: Optional[URLPatternTypes] = None, *, name: Optional[str] = None, **lookups: Any
 ) -> Route:
-    global mock
-    return mock.put(url, name=name, **lookups)
+    pass
 
 
 def patch(
     url: Optional[URLPatternTypes] = None, *, name: Optional[str] = None, **lookups: Any
 ) -> Route:
-    global mock
-    return mock.patch(url, name=name, **lookups)
+    pass
 
 
 def delete(
     url: Optional[URLPatternTypes] = None, *, name: Optional[str] = None, **lookups: Any
 ) -> Route:
-    global mock
-    return mock.delete(url, name=name, **lookups)
+    pass
 
 
 def head(
     url: Optional[URLPatternTypes] = None, *, name: Optional[str] = None, **lookups: Any
 ) -> Route:
-    global mock
-    return mock.head(url, name=name, **lookups)
+    pass
 
 
 def options(
     url: Optional[URLPatternTypes] = None, *, name: Optional[str] = None, **lookups: Any
 ) -> Route:
-    global mock
-    return mock.options(url, name=name, **lookups)
+    pass

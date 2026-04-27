@@ -58,59 +58,39 @@ class Router:
         """
         Clears all routes. May be rolled back to snapshot state.
         """
-        self.routes.clear()
+        pass
 
     def snapshot(self) -> None:
         """
         Snapshots current routes and calls state.
         """
-        # Snapshot current routes and calls
-        routes = RouteList(self.routes)
-        calls = CallList(self.calls)
-        self._snapshots.append((routes, calls))
-
-        # Snapshot each route state
-        for route in routes:
-            route.snapshot()
+        pass
 
     def rollback(self) -> None:
         """
         Rollbacks routes, and optionally calls, to snapshot state.
         """
-        if not self._snapshots:
-            return
-
-        # Revert added routes and calls to last snapshot
-        routes, calls = self._snapshots.pop()
-        self.routes[:] = routes
-        self.calls[:] = calls
-
-        # Revert each route state to last snapshot
-        for route in self.routes:
-            route.rollback()
+        pass
 
     def reset(self) -> None:
         """
         Resets call stats.
         """
-        self.calls.clear()
-        for route in self.routes:
-            route.reset()
+        pass
 
     def assert_all_called(self) -> None:
-        not_called_routes = [route for route in self.routes if not route.called]
-        assert not_called_routes == [], "RESPX: some routes were not called!"
+        pass
 
     def __getitem__(self, name: str) -> Route:
         return self.routes[name]
 
     @overload
-    def pop(self, name: str) -> Route:
-        ...  # pragma: nocover
+    def pop(self, name: str) -> Route: ...  # pragma: nocover
 
     @overload
-    def pop(self, name: str, default: DefaultType) -> Union[Route, DefaultType]:
-        ...  # pragma: nocover
+    def pop(
+        self, name: str, default: DefaultType
+    ) -> Union[Route, DefaultType]: ...  # pragma: nocover
 
     def pop(self, name, default=...):
         """
@@ -118,32 +98,19 @@ class Router:
 
         Raises KeyError when `default` not provided and name is not found.
         """
-        try:
-            return self.routes.pop(name)
-        except KeyError as ex:
-            if default is ...:
-                raise ex
-            return default
+        pass
 
     def route(
         self, *patterns: Pattern, name: Optional[str] = None, **lookups: Any
     ) -> Route:
-        route = Route(*patterns, **lookups)
-        return self.add(route, name=name)
+        pass
 
     def add(self, route: Route, *, name: Optional[str] = None) -> Route:
         """
         Adds a route with optionally given name,
         replacing any existing route with same name or pattern.
         """
-        if not isinstance(route, Route):
-            raise ValueError(
-                f"Invalid route {route!r}, please use respx.route(...).mock(...)"
-            )
-
-        route._pattern = merge_patterns(route.pattern, **self._bases)
-        route = self.routes.add(route, name=name)
-        return route
+        pass
 
     def request(
         self,
@@ -153,15 +120,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        if lookups:
-            # Validate that lookups doesn't contain method or url
-            pattern_keys = {p.split("__", 1)[0] for p in lookups.keys()}
-            if "method" in pattern_keys:
-                raise TypeError("Got multiple values for pattern 'method'")
-            elif url and "url" in pattern_keys:
-                raise TypeError("Got multiple values for pattern 'url'")
-
-        return self.route(method=method, url=url, name=name, **lookups)
+        pass
 
     def get(
         self,
@@ -170,7 +129,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        return self.request(method="GET", url=url, name=name, **lookups)
+        pass
 
     def post(
         self,
@@ -179,7 +138,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        return self.request(method="POST", url=url, name=name, **lookups)
+        pass
 
     def put(
         self,
@@ -188,7 +147,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        return self.request(method="PUT", url=url, name=name, **lookups)
+        pass
 
     def patch(
         self,
@@ -197,7 +156,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        return self.request(method="PATCH", url=url, name=name, **lookups)
+        pass
 
     def delete(
         self,
@@ -206,7 +165,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        return self.request(method="DELETE", url=url, name=name, **lookups)
+        pass
 
     def head(
         self,
@@ -215,7 +174,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        return self.request(method="HEAD", url=url, name=name, **lookups)
+        pass
 
     def options(
         self,
@@ -224,7 +183,7 @@ class Router:
         name: Optional[str] = None,
         **lookups: Any,
     ) -> Route:
-        return self.request(method="OPTIONS", url=url, name=name, **lookups)
+        pass
 
     def record(
         self,
@@ -233,91 +192,23 @@ class Router:
         response: Optional[httpx.Response] = None,
         route: Optional[Route] = None,
     ) -> None:
-        call = self.calls.record(request, response)
-        if route:
-            route.calls.append(call)
+        pass
 
     @contextmanager
     def resolver(self, request: httpx.Request) -> Generator[ResolvedRoute, None, None]:
-        resolved = ResolvedRoute()
-
-        try:
-            yield resolved
-
-            if resolved.route is None:
-                # Assert we always get a route match, if check is enabled
-                if self._assert_all_mocked:
-                    raise AllMockedAssertionError(f"RESPX: {request!r} not mocked!")
-
-                # Auto mock a successful empty response
-                resolved.response = httpx.Response(200)
-
-            elif resolved.response == request:
-                # Pass-through request
-                raise PassThrough(
-                    f"Request marked to pass through: {request!r}",
-                    request=request,
-                    origin=resolved.route,
-                )
-
-            else:
-                # Mocked response
-                assert isinstance(resolved.response, httpx.Response)
-
-        except SideEffectError as error:
-            self.record(request, response=None, route=error.route)
-            raise error.origin from error
-        except PassThrough:
-            self.record(request, response=None, route=resolved.route)
-            raise
-        else:
-            self.record(request, response=resolved.response, route=resolved.route)
+        pass
 
     def resolve(self, request: httpx.Request) -> ResolvedRoute:
-        with self.resolver(request) as resolved:
-            for route in self.routes:
-                prospect = route.match(request)
-                if prospect is not None:
-                    resolved.route = route
-                    resolved.response = cast(ResolvedResponseTypes, prospect)
-                    break
-
-        if resolved.response and isinstance(resolved.response.stream, httpx.ByteStream):
-            resolved.response.read()  # Pre-read stream
-
-        return resolved
+        pass
 
     async def aresolve(self, request: httpx.Request) -> ResolvedRoute:
-        with self.resolver(request) as resolved:
-            for route in self.routes:
-                prospect: RouteResultTypes = route.match(request)
-
-                # Await async side effect and wrap any exception
-                if inspect.isawaitable(prospect):
-                    try:
-                        prospect = await prospect
-                    except Exception as error:
-                        raise SideEffectError(route, origin=error) from error
-
-                if prospect is not None:
-                    resolved.route = route
-                    resolved.response = cast(ResolvedResponseTypes, prospect)
-                    break
-
-        if resolved.response and isinstance(resolved.response.stream, httpx.ByteStream):
-            await resolved.response.aread()  # Pre-read stream
-
-        return resolved
+        pass
 
     def handler(self, request: httpx.Request) -> httpx.Response:
-        resolved = self.resolve(request)
-        assert isinstance(resolved.response, httpx.Response)
-        return resolved.response
+        pass
 
     async def async_handler(self, request: httpx.Request) -> httpx.Response:
-        resolved = await self.aresolve(request)
-        assert isinstance(resolved.response, httpx.Response)
-        return resolved.response
+        pass
 
 
 class MockRouter(Router):
@@ -346,8 +237,7 @@ class MockRouter(Router):
         assert_all_mocked: Optional[bool] = None,
         base_url: Optional[str] = None,
         using: Optional[Union[str, Default]] = DEFAULT,
-    ) -> "MockRouter":
-        ...  # pragma: nocover
+    ) -> "MockRouter": ...  # pragma: nocover
 
     @overload
     def __call__(
@@ -358,8 +248,7 @@ class MockRouter(Router):
         assert_all_mocked: Optional[bool] = None,
         base_url: Optional[str] = None,
         using: Optional[Union[str, Default]] = DEFAULT,
-    ) -> Callable:
-        ...  # pragma: nocover
+    ) -> Callable: ...  # pragma: nocover
 
     def __call__(
         self,
@@ -446,26 +335,11 @@ class MockRouter(Router):
         """
         Register transport, snapshot router and start patching.
         """
-        self.snapshot()
-        self.Mocker = Mocker.registry.get(self.using or "")
-        if self.Mocker:
-            self.Mocker.register(self)
-            self.Mocker.start()
+        pass
 
     def stop(self, clear: bool = True, reset: bool = True, quiet: bool = False) -> None:
         """
         Unregister transport and rollback router.
         Stop patching when no registered transports left.
         """
-        unregistered = self.Mocker.unregister(self) if self.Mocker else True
-
-        try:
-            if unregistered and not quiet and self._assert_all_called:
-                self.assert_all_called()
-        finally:
-            if clear:
-                self.rollback()
-            if reset:
-                self.reset()
-            if self.Mocker:
-                self.Mocker.stop()
+        pass

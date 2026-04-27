@@ -33,9 +33,9 @@ class AsyncTransportHandler:
 
 class WSGIHandler(TransportHandler):
     def __init__(self, app: Callable, **kwargs: Any) -> None:
-        super().__init__(httpx.WSGITransport(app=app, **kwargs))
+        pass
 
 
 class ASGIHandler(AsyncTransportHandler):
     def __init__(self, app: Callable, **kwargs: Any) -> None:
-        super().__init__(httpx.ASGITransport(app=app, **kwargs))
+        pass

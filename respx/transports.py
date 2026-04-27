@@ -34,24 +34,7 @@ class MockTransport(httpx.MockTransport):
         async_handler: Optional[AsyncRequestHandler] = None,
         router: Optional["Router"] = None,
     ):
-        if router:
-            super().__init__(router.handler)
-            self._router = router
-        elif handler:
-            super().__init__(handler)
-            self._router = None
-        elif async_handler:
-            super().__init__(async_handler)
-            self._router = None
-        else:
-            raise RuntimeError(
-                "Missing a MockTransport required handler or router argument"
-            )
-        warn(
-            "MockTransport is deprecated. "
-            "Please use `httpx.MockTransport(respx_router.handler)`.",
-            category=DeprecationWarning,
-        )
+        pass
 
     def __exit__(
         self,

@@ -23,13 +23,7 @@ import httpx
 
 class MultiItems(defaultdict):
     def __init__(self, values: Optional[Iterable[Tuple[str, Any]]] = None) -> None:
-        super().__init__(tuple)
-        if values is not None:
-            for key, value in values:
-                if isinstance(value, (tuple, list)):
-                    self[key] += tuple(value)  # Convert list to tuple and extend
-                else:
-                    self[key] += (value,)  # Extend with value
+        pass
 
     def get_list(self, key: str) -> List[Any]:
         pass
@@ -38,64 +32,21 @@ class MultiItems(defaultdict):
         pass
 
     def append(self, key: str, value: Any) -> None:
-        self[key] += (value,)
+        pass
 
 
 def _parse_multipart_form_data(
     content: bytes, *, content_type: str, encoding: str
 ) -> Tuple[MultiItems, MultiItems]:
-    form_data = b"\r\n".join(
-        (
-            b"MIME-Version: 1.0",
-            b"Content-Type: " + content_type.encode(encoding),
-            b"\r\n" + content,
-        )
-    )
-    data = MultiItems()
-    files = MultiItems()
-    for payload in email.message_from_bytes(form_data).get_payload():
-        payload = cast(Message, payload)
-        name = payload.get_param("name", header="Content-Disposition")
-        assert isinstance(name, str)
-        filename = payload.get_filename()
-        content_type = payload.get_content_type()
-        value = payload.get_payload(decode=True)
-        assert isinstance(value, bytes)
-        if content_type.startswith("text/") and filename is None:
-            # Text field
-            data.append(name, value.decode(payload.get_content_charset() or "utf-8"))
-        else:
-            # File field
-            files.append(name, (filename, value))
-
-    return data, files
+    pass
 
 
 def _parse_urlencoded_data(content: bytes, *, encoding: str) -> MultiItems:
-    return MultiItems(
-        (key, value)
-        for key, value in parse_qsl(content.decode(encoding), keep_blank_values=True)
-    )
+    pass
 
 
 def decode_data(request: httpx.Request) -> Tuple[MultiItems, MultiItems]:
-    content = request.read()
-    content_type = request.headers.get("Content-Type", "")
-
-    if content_type.startswith("multipart/form-data"):
-        data, files = _parse_multipart_form_data(
-            content,
-            content_type=content_type,
-            encoding=request.headers.encoding,
-        )
-    else:
-        data = _parse_urlencoded_data(
-            content,
-            encoding=request.headers.encoding,
-        )
-        files = MultiItems()
-
-    return data, files
+    pass
 
 
 Self = TypeVar("Self", bound="SetCookie")
